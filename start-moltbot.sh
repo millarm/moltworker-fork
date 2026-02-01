@@ -130,6 +130,12 @@ else
     echo "Using existing config"
 fi
 
+# Export GitHub token for gh CLI
+if [ -n "$GITHUB_TOKEN" ]; then
+    export GITHUB_TOKEN="$GITHUB_TOKEN"
+    export GH_TOKEN="$GITHUB_TOKEN"  # gh CLI also checks this
+fi
+
 # ============================================================
 # UPDATE CONFIG FROM ENVIRONMENT VARIABLES
 # ============================================================
