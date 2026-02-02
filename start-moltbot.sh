@@ -136,6 +136,16 @@ if [ -n "$GITHUB_TOKEN" ]; then
     export GH_TOKEN="$GITHUB_TOKEN"  # gh CLI also checks this
 fi
 
+if [ -n "$IG_API_KEY" ]; then
+    export IG_API_KEY="$IG_API_KEY"
+fi
+if [ -n "$IG_USERNAME" ]; then
+    export IG_USERNAME="$IG_USERNAME"
+fi
+if [ -n "$IG_PASSWORD" ]; then
+    export IG_PASSWORD="$IG_PASSWORD"
+fi
+
 # ============================================================
 # UPDATE CONFIG FROM ENVIRONMENT VARIABLES
 # ============================================================
