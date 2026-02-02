@@ -147,6 +147,60 @@ if [ -n "$IG_PASSWORD" ]; then
 fi
 
 # ============================================================
+
+# ============================================================
+# RESTORE WORKSPACE FROM GITHUB
+# ============================================================
+# Pulls identity files, memory, and scripts from GitHub repo
+# This runs after R2 restore so GitHub is authoritative for workspace
+
+WORKSPACE_REPO="${WORKSPACE_REPO:-}"
+WORKSPACE_DIR="/root/clawd"
+
+if [ -n "$WORKSPACE_REPO" ] && command -v gh &> /dev/null; then
+    echo "Checking for workspace restore from GitHub ($WORKSPACE_REPO)..."
+    
+    git config --global user.name "Cassandra"
+    git config --global user.email "cassandra@clawd.bot"
+    gh auth setup-git 2>/dev/null || true
+    
+    if [ ! -f "$WORKSPACE_DIR/IDENTITY.md" ]; then
+        echo "IDENTITY.md missing, restoring workspace from GitHub..."
+        
+        TEMP_DIR="/tmp/workspace-restore"
+        rm -rf "$TEMP_DIR"
+        
+        if gh repo clone "$WORKSPACE_REPO" "$TEMP_DIR" -- --depth 1 2>/dev/null; then
+            if [ -d "$TEMP_DIR/workspace" ]; then
+                mkdir -p "$WORKSPACE_DIR/memory"
+                
+                # Restore identity/config files
+                for file in IDENTITY.md USER.md SOUL.md AGENTS.md TOOLS.md HEARTBEAT.md; do
+                    [ -f "$TEMP_DIR/workspace/$file" ] && cp "$TEMP_DIR/workspace/$file" "$WORKSPACE_DIR/"
+                done
+                
+                # Restore memory files
+                cp "$TEMP_DIR/workspace/memory"/*.md "$WORKSPACE_DIR/memory/" 2>/dev/null || true
+                
+                # Restore scripts
+                for file in ig_alert_bot.py ig_data_logger.py push_data.sh sync-workspace.sh; do
+                    [ -f "$TEMP_DIR/workspace/$file" ] && cp "$TEMP_DIR/workspace/$file" "$WORKSPACE_DIR/"
+                done
+                
+                chmod +x "$WORKSPACE_DIR"/*.sh 2>/dev/null || true
+                echo "✓ Workspace restored from GitHub"
+            fi
+            rm -rf "$TEMP_DIR"
+        else
+            echo "GitHub workspace restore failed, continuing without"
+        fi
+    else
+        echo "IDENTITY.md exists, skipping GitHub restore"
+    fi
+elif [ -n "$WORKSPACE_REPO" ]; then
+    echo "WORKSPACE_REPO set but gh CLI not available, skipping restore"
+fi
+
 # UPDATE CONFIG FROM ENVIRONMENT VARIABLES
 # ============================================================
 node << EOFNODE
