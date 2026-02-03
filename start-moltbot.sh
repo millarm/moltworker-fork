@@ -356,6 +356,15 @@ console.log('Config:', JSON.stringify(config, null, 2));
 EOFNODE
 
 # ============================================================
+# ============================================================
+# WORKSPACE BOOTSTRAP
+# ============================================================
+# Restore workspace scripts and start trading bots
+if [ -x /usr/local/bin/workspace-bootstrap.sh ]; then
+    echo "Running workspace bootstrap..."
+    /usr/local/bin/workspace-bootstrap.sh || echo "Warning: Workspace bootstrap had issues"
+fi
+
 # START GATEWAY
 # ============================================================
 # Note: R2 backup sync is handled by the Worker's cron trigger
