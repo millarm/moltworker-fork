@@ -1,0 +1,4 @@
+# Trading bot dependencies
+trading_ig>=0.0.23
+pandas>=2.0.0
+munch>=4.0.0

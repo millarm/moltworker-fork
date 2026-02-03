@@ -48,6 +48,13 @@ COPY moltbot.json.template /root/.clawdbot-templates/moltbot.json.template
 # Copy custom skills
 COPY skills/ /root/clawd/skills/
 
+# Copy Python requirements for trading bots
+COPY requirements.txt /usr/local/share/moltbot/requirements.txt
+
+# Copy workspace bootstrap script
+COPY workspace-bootstrap.sh /usr/local/bin/workspace-bootstrap.sh
+RUN chmod +x /usr/local/bin/workspace-bootstrap.sh
+
 # Set working directory
 WORKDIR /root/clawd
 
