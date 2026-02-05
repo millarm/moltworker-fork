@@ -417,7 +417,11 @@ app.all('*', async (c) => {
 
 /**
  * Scheduled handler for cron triggers.
- * Syncs moltbot config/state from container to R2 for persistence.
+ * Ensures moltbot gateway is running, then syncs config/state to R2.
+ * 
+ * This is critical for keeping trading bots alive - without calling
+ * ensureMoltbotGateway(), a sleeping container will only run sync commands
+ * and the trading bots won't restart.
  */
 async function scheduled(
   _event: ScheduledEvent,
@@ -426,6 +430,17 @@ async function scheduled(
 ): Promise<void> {
   const options = buildSandboxOptions(env);
   const sandbox = getSandbox(env.Sandbox, 'moltbot', options);
+
+  // Ensure gateway (and trading bots) are running before syncing
+  // This is essential - without it, cron only syncs but doesn't restart bots
+  try {
+    console.log('[cron] Ensuring moltbot gateway is running...');
+    await ensureMoltbotGateway(sandbox, env);
+    console.log('[cron] Gateway is running');
+  } catch (err) {
+    console.error('[cron] Failed to start gateway:', err);
+    // Continue with sync anyway - we might still be able to backup existing data
+  }
 
   console.log('[cron] Starting backup sync to R2...');
   const result = await syncToR2(sandbox, env);
