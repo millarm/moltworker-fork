@@ -24,7 +24,7 @@ fi
 
 # Open the browser to a blank page first
 playwright-cli "${GLOBAL_ARGS[@]}" open "about:blank" >/dev/null 2>&1 &
-sleep 2
+sleep 20
 
 # Read Access credentials
 CF_ACCESS_CLIENT_ID=$(cat "$CCTR_FIXTURE_DIR/cf-access-client-id.txt" 2>/dev/null || echo "")
