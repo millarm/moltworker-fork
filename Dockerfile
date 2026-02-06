@@ -1,6 +1,6 @@
 FROM docker.io/cloudflare/sandbox:0.7.0
 
-# Install Node.js 22 (required by clawdbot) and rsync (for R2 backup sync)
+# Install Node.js 22 (required by OpenClaw) and rsync (for R2 backup sync)
 # The base image has Node 20, we need to replace it with Node 22
 # Using direct binary download for reliability
 ENV NODE_VERSION=22.13.1
@@ -23,6 +23,7 @@ RUN apt-get install -y python3 python3-pip python3-venv
 # Install pnpm globally
 RUN npm install -g pnpm
 
+<<<<<<< HEAD
 # Install GitHub CLI
 RUN (type -p wget >/dev/null || apt-get install wget -y) \
     && mkdir -p -m 755 /etc/apt/keyrings \
@@ -32,24 +33,23 @@ RUN (type -p wget >/dev/null || apt-get install wget -y) \
     && apt-get update && apt-get install -y gh
 
 # Install moltbot (CLI is still named clawdbot until upstream renames)
+=======
+# Install OpenClaw (formerly clawdbot/moltbot)
+>>>>>>> 9ab56d7 (feat: upgrade from clawdbot@2026.1.24-3 to openclaw@2026.2.3)
 # Pin to specific version for reproducible builds
-RUN npm install -g clawdbot@2026.1.24-3 \
-    && clawdbot --version
+RUN npm install -g openclaw@2026.2.3 \
+    && openclaw --version
 
-# Create moltbot directories (paths still use clawdbot until upstream renames)
-# Templates are stored in /root/.clawdbot-templates for initialization
-RUN mkdir -p /root/.clawdbot \
-    && mkdir -p /root/.clawdbot-templates \
+# Create OpenClaw directories
+# Legacy .clawdbot paths are kept for R2 backup migration
+RUN mkdir -p /root/.openclaw \
     && mkdir -p /root/clawd \
     && mkdir -p /root/clawd/skills
 
 # Copy startup script
-# Build cache bust: 2026-01-28-v26-browser-skill
-COPY start-moltbot.sh /usr/local/bin/start-moltbot.sh
-RUN chmod +x /usr/local/bin/start-moltbot.sh
-
-# Copy default configuration template
-COPY moltbot.json.template /root/.clawdbot-templates/moltbot.json.template
+# Build cache bust: 2026-02-06-v28-openclaw-upgrade
+COPY start-openclaw.sh /usr/local/bin/start-openclaw.sh
+RUN chmod +x /usr/local/bin/start-openclaw.sh
 
 # Copy custom skills
 COPY skills/ /root/clawd/skills/
