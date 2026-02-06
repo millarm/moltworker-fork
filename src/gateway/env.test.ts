@@ -54,8 +54,12 @@ describe('buildEnvVars', () => {
     });
     const result = buildEnvVars(env);
     expect(result.ANTHROPIC_API_KEY).toBe('sk-gateway-key');
-    expect(result.ANTHROPIC_BASE_URL).toBe('https://gateway.ai.cloudflare.com/v1/123/my-gw/anthropic');
-    expect(result.AI_GATEWAY_BASE_URL).toBe('https://gateway.ai.cloudflare.com/v1/123/my-gw/anthropic');
+    expect(result.ANTHROPIC_BASE_URL).toBe(
+      'https://gateway.ai.cloudflare.com/v1/123/my-gw/anthropic',
+    );
+    expect(result.AI_GATEWAY_BASE_URL).toBe(
+      'https://gateway.ai.cloudflare.com/v1/123/my-gw/anthropic',
+    );
   });
 
   it('legacy AI_GATEWAY_* overrides direct ANTHROPIC_API_KEY', () => {
@@ -75,7 +79,9 @@ describe('buildEnvVars', () => {
       AI_GATEWAY_BASE_URL: 'https://gateway.ai.cloudflare.com/v1/123/my-gw/anthropic///',
     });
     const result = buildEnvVars(env);
-    expect(result.AI_GATEWAY_BASE_URL).toBe('https://gateway.ai.cloudflare.com/v1/123/my-gw/anthropic');
+    expect(result.AI_GATEWAY_BASE_URL).toBe(
+      'https://gateway.ai.cloudflare.com/v1/123/my-gw/anthropic',
+    );
   });
 
   it('falls back to ANTHROPIC_BASE_URL when no AI_GATEWAY_BASE_URL', () => {

@@ -6,7 +6,7 @@ import { mountR2Storage } from './r2';
 
 /**
  * Find an existing OpenClaw gateway process
- * 
+ *
  * @param sandbox - The sandbox instance
  * @returns The process if found and running/starting, null otherwise
  */
@@ -16,19 +16,19 @@ export async function findExistingMoltbotProcess(sandbox: Sandbox): Promise<Proc
     for (const proc of processes) {
       // Match gateway process (openclaw gateway or legacy clawdbot gateway)
       // Don't match CLI commands like "openclaw devices list"
-      const isGatewayProcess = 
+      const isGatewayProcess =
         proc.command.includes('start-openclaw.sh') ||
         proc.command.includes('openclaw gateway') ||
         // Legacy: match old startup script during transition
         proc.command.includes('start-moltbot.sh') ||
         proc.command.includes('clawdbot gateway');
-      const isCliCommand = 
+      const isCliCommand =
         proc.command.includes('openclaw devices') ||
         proc.command.includes('openclaw --version') ||
         proc.command.includes('openclaw onboard') ||
         proc.command.includes('clawdbot devices') ||
         proc.command.includes('clawdbot --version');
-      
+
       if (isGatewayProcess && !isCliCommand) {
         if (proc.status === 'starting' || proc.status === 'running') {
           return proc;
@@ -43,12 +43,12 @@ export async function findExistingMoltbotProcess(sandbox: Sandbox): Promise<Proc
 
 /**
  * Ensure the OpenClaw gateway is running
- * 
+ *
  * This will:
  * 1. Mount R2 storage if configured
  * 2. Check for an existing gateway process
  * 3. Wait for it to be ready, or start a new one
- * 
+ *
  * @param sandbox - The sandbox instance
  * @param env - Worker environment bindings
  * @returns The running gateway process
@@ -61,7 +61,12 @@ export async function ensureMoltbotGateway(sandbox: Sandbox, env: MoltbotEnv): P
   // Check if gateway is already running or starting
   const existingProcess = await findExistingMoltbotProcess(sandbox);
   if (existingProcess) {
-    console.log('Found existing gateway process:', existingProcess.id, 'status:', existingProcess.status);
+    console.log(
+      'Found existing gateway process:',
+      existingProcess.id,
+      'status:',
+      existingProcess.status,
+    );
 
     // Always use full startup timeout - a process can be "running" but not ready yet
     // (e.g., just started by another concurrent request). Using a shorter timeout
@@ -71,7 +76,8 @@ export async function ensureMoltbotGateway(sandbox: Sandbox, env: MoltbotEnv): P
       await existingProcess.waitForPort(MOLTBOT_PORT, { mode: 'tcp', timeout: STARTUP_TIMEOUT_MS });
       console.log('Gateway is reachable');
       return existingProcess;
-    } catch (e) {
+      // eslint-disable-next-line no-unused-vars
+    } catch (_e) {
       // Timeout waiting for port - process is likely dead or stuck, kill and restart
       console.log('Existing process not reachable after full timeout, killing and restarting...');
       try {
@@ -116,7 +122,9 @@ export async function ensureMoltbotGateway(sandbox: Sandbox, env: MoltbotEnv): P
       const logs = await process.getLogs();
       console.error('[Gateway] startup failed. Stderr:', logs.stderr);
       console.error('[Gateway] startup failed. Stdout:', logs.stdout);
-      throw new Error(`OpenClaw gateway failed to start. Stderr: ${logs.stderr || '(empty)'}`);
+      throw new Error(`OpenClaw gateway failed to start. Stderr: ${logs.stderr || '(empty)'}`, {
+        cause: e,
+      });
     } catch (logErr) {
       console.error('[Gateway] Failed to get logs:', logErr);
       throw e;
@@ -125,6 +133,6 @@ export async function ensureMoltbotGateway(sandbox: Sandbox, env: MoltbotEnv): P
 
   // Verify gateway is actually responding
   console.log('[Gateway] Verifying gateway health...');
-  
+
   return process;
 }

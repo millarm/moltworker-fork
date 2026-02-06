@@ -1,7 +1,13 @@
 import { Hono } from 'hono';
 import type { AppEnv } from '../types';
 import { createAccessMiddleware } from '../auth';
-import { ensureMoltbotGateway, findExistingMoltbotProcess, mountR2Storage, syncToR2, waitForProcess } from '../gateway';
+import {
+  ensureMoltbotGateway,
+  findExistingMoltbotProcess,
+  mountR2Storage,
+  syncToR2,
+  waitForProcess,
+} from '../gateway';
 import { R2_MOUNT_PATH } from '../config';
 
 // CLI commands can take 10-15 seconds to complete due to WebSocket connection overhead
@@ -10,7 +16,7 @@ const CLI_TIMEOUT_MS = 20000;
 /**
  * API routes
  * - /api/admin/* - Protected admin API routes (Cloudflare Access required)
- * 
+ *
  * Note: /api/status is now handled by publicRoutes (no auth required)
  */
 const api = new Hono<AppEnv>();
@@ -33,7 +39,9 @@ adminApi.get('/devices', async (c) => {
 
     // Run OpenClaw CLI to list devices
     // Must specify --url to connect to the gateway running in the same container
-    const proc = await sandbox.startProcess('openclaw devices list --json --url ws://localhost:18789');
+    const proc = await sandbox.startProcess(
+      'openclaw devices list --json --url ws://localhost:18789',
+    );
     await waitForProcess(proc, CLI_TIMEOUT_MS);
 
     const logs = await proc.getLogs();
@@ -85,7 +93,9 @@ adminApi.post('/devices/:requestId/approve', async (c) => {
     await ensureMoltbotGateway(sandbox, c.env);
 
     // Run OpenClaw CLI to approve the device
-    const proc = await sandbox.startProcess(`openclaw devices approve ${requestId} --url ws://localhost:18789`);
+    const proc = await sandbox.startProcess(
+      `openclaw devices approve ${requestId} --url ws://localhost:18789`,
+    );
     await waitForProcess(proc, CLI_TIMEOUT_MS);
 
     const logs = await proc.getLogs();
@@ -117,7 +127,9 @@ adminApi.post('/devices/approve-all', async (c) => {
     await ensureMoltbotGateway(sandbox, c.env);
 
     // First, get the list of pending devices
-    const listProc = await sandbox.startProcess('openclaw devices list --json --url ws://localhost:18789');
+    const listProc = await sandbox.startProcess(
+      'openclaw devices list --json --url ws://localhost:18789',
+    );
     await waitForProcess(listProc, CLI_TIMEOUT_MS);
 
     const listLogs = await listProc.getLogs();
@@ -144,11 +156,17 @@ adminApi.post('/devices/approve-all', async (c) => {
 
     for (const device of pending) {
       try {
-        const approveProc = await sandbox.startProcess(`openclaw devices approve ${device.requestId} --url ws://localhost:18789`);
+        // eslint-disable-next-line no-await-in-loop -- sequential device approval required
+        const approveProc = await sandbox.startProcess(
+          `openclaw devices approve ${device.requestId} --url ws://localhost:18789`,
+        );
+        // eslint-disable-next-line no-await-in-loop
         await waitForProcess(approveProc, CLI_TIMEOUT_MS);
 
+        // eslint-disable-next-line no-await-in-loop
         const approveLogs = await approveProc.getLogs();
-        const success = approveLogs.stdout?.toLowerCase().includes('approved') || approveProc.exitCode === 0;
+        const success =
+          approveLogs.stdout?.toLowerCase().includes('approved') || approveProc.exitCode === 0;
 
         results.push({ requestId: device.requestId, success });
       } catch (err) {
@@ -160,10 +178,10 @@ adminApi.post('/devices/approve-all', async (c) => {
       }
     }
 
-    const approvedCount = results.filter(r => r.success).length;
+    const approvedCount = results.filter((r) => r.success).length;
     return c.json({
-      approved: results.filter(r => r.success).map(r => r.requestId),
-      failed: results.filter(r => !r.success),
+      approved: results.filter((r) => r.success).map((r) => r.requestId),
+      failed: results.filter((r) => !r.success),
       message: `Approved ${approvedCount} of ${pending.length} device(s)`,
     });
   } catch (error) {
@@ -196,7 +214,9 @@ adminApi.get('/storage', async (c) => {
       await mountR2Storage(sandbox, c.env);
 
       // Check for sync marker file
-      const proc = await sandbox.startProcess(`cat ${R2_MOUNT_PATH}/.last-sync 2>/dev/null || echo ""`);
+      const proc = await sandbox.startProcess(
+        `cat ${R2_MOUNT_PATH}/.last-sync 2>/dev/null || echo ""`,
+      );
       await waitForProcess(proc, 5000);
       const logs = await proc.getLogs();
       const timestamp = logs.stdout?.trim();
@@ -232,11 +252,14 @@ adminApi.post('/storage/sync', async (c) => {
     });
   } else {
     const status = result.error?.includes('not configured') ? 400 : 500;
-    return c.json({
-      success: false,
-      error: result.error,
-      details: result.details,
-    }, status);
+    return c.json(
+      {
+        success: false,
+        error: result.error,
+        details: result.details,
+      },
+      status,
+    );
   }
 });
 
@@ -256,7 +279,7 @@ adminApi.post('/gateway/restart', async (c) => {
         console.error('Error killing process:', killErr);
       }
       // Wait a moment for the process to die
-      await new Promise(r => setTimeout(r, 2000));
+      await new Promise((r) => setTimeout(r, 2000));
     }
 
     // Start a new gateway in the background
