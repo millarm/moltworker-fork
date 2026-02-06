@@ -65,9 +65,10 @@ npm install
 # Set your API key (direct Anthropic access)
 npx wrangler secret put ANTHROPIC_API_KEY
 
-# Or use AI Gateway instead (see "Optional: Cloudflare AI Gateway" below)
-# npx wrangler secret put AI_GATEWAY_API_KEY
-# npx wrangler secret put AI_GATEWAY_BASE_URL
+# Or use Cloudflare AI Gateway instead (see "Optional: Cloudflare AI Gateway" below)
+# npx wrangler secret put CLOUDFLARE_AI_GATEWAY_API_KEY
+# npx wrangler secret put CF_AI_GATEWAY_ACCOUNT_ID
+# npx wrangler secret put CF_AI_GATEWAY_GATEWAY_ID
 
 # Generate and set a gateway token (required for remote access)
 # Save this token - you'll need it to access the Control UI
@@ -348,42 +349,53 @@ See `skills/cloudflare-browser/SKILL.md` for full documentation.
 
 ## Optional: Cloudflare AI Gateway
 
-You can route API requests through [Cloudflare AI Gateway](https://developers.cloudflare.com/ai-gateway/) for caching, rate limiting, analytics, and cost tracking. AI Gateway supports multiple providers — configure your preferred provider in the gateway and use these env vars:
+You can route API requests through [Cloudflare AI Gateway](https://developers.cloudflare.com/ai-gateway/) for caching, rate limiting, analytics, and cost tracking. OpenClaw has native support for Cloudflare AI Gateway as a first-class provider.
+
+AI Gateway acts as a proxy between OpenClaw and your AI provider (e.g., Anthropic). Requests are sent to `https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/anthropic` instead of directly to `api.anthropic.com`, giving you Cloudflare's analytics, caching, and rate limiting. You still need a provider API key (e.g., your Anthropic API key) — the gateway forwards it to the upstream provider.
 
 ### Setup
 
 1. Create an AI Gateway in the [AI Gateway section](https://dash.cloudflare.com/?to=/:account/ai/ai-gateway/create-gateway) of the Cloudflare Dashboard.
-2. Add a provider (e.g., Anthropic) to your gateway
-3. Set the gateway secrets:
-
-You'll find the base URL on the Overview tab of your newly created gateway. At the bottom of the page, expand the **Native API/SDK Examples** section and select "Anthropic".
+2. Set the three required secrets:
 
 ```bash
-# Your provider's API key (e.g., Anthropic API key)
-npx wrangler secret put AI_GATEWAY_API_KEY
+# Your AI provider's API key (e.g., your Anthropic API key).
+# This is passed through the gateway to the upstream provider.
+npx wrangler secret put CLOUDFLARE_AI_GATEWAY_API_KEY
 
-# Your AI Gateway endpoint URL
-npx wrangler secret put AI_GATEWAY_BASE_URL
-# Enter: https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/anthropic
+# Your Cloudflare account ID
+npx wrangler secret put CF_AI_GATEWAY_ACCOUNT_ID
+
+# Your AI Gateway ID (from the gateway overview page)
+npx wrangler secret put CF_AI_GATEWAY_GATEWAY_ID
 ```
 
-4. Redeploy:
+All three are required. OpenClaw constructs the gateway URL from the account ID and gateway ID, and passes the API key to the upstream provider through the gateway.
+
+3. Redeploy:
 
 ```bash
 npm run deploy
 ```
 
-The `AI_GATEWAY_*` variables take precedence over `ANTHROPIC_*` if both are set.
+When Cloudflare AI Gateway is configured, it takes precedence over direct `ANTHROPIC_API_KEY` or `OPENAI_API_KEY`.
+
+### Legacy AI Gateway Configuration
+
+The previous `AI_GATEWAY_API_KEY` + `AI_GATEWAY_BASE_URL` approach is still supported for backward compatibility but is deprecated in favor of the native configuration above.
 
 ## All Secrets Reference
 
 | Secret | Required | Description |
 |--------|----------|-------------|
-| `AI_GATEWAY_API_KEY` | Yes* | API key for your AI Gateway provider (requires `AI_GATEWAY_BASE_URL`) |
-| `AI_GATEWAY_BASE_URL` | Yes* | AI Gateway endpoint URL (required when using `AI_GATEWAY_API_KEY`) |
-| `ANTHROPIC_API_KEY` | Yes* | Direct Anthropic API key (fallback if AI Gateway not configured) |
-| `ANTHROPIC_BASE_URL` | No | Direct Anthropic API base URL (fallback) |
+| `CLOUDFLARE_AI_GATEWAY_API_KEY` | Yes* | Your AI provider's API key, passed through the gateway (e.g., your Anthropic API key). Requires `CF_AI_GATEWAY_ACCOUNT_ID` and `CF_AI_GATEWAY_GATEWAY_ID` |
+| `CF_AI_GATEWAY_ACCOUNT_ID` | Yes* | Your Cloudflare account ID (used to construct the gateway URL) |
+| `CF_AI_GATEWAY_GATEWAY_ID` | Yes* | Your AI Gateway ID (used to construct the gateway URL) |
+| `ANTHROPIC_API_KEY` | Yes* | Direct Anthropic API key (alternative to AI Gateway) |
+| `ANTHROPIC_BASE_URL` | No | Direct Anthropic API base URL |
 | `OPENAI_API_KEY` | No | OpenAI API key (alternative provider) |
+| `AI_GATEWAY_API_KEY` | No | Legacy AI Gateway API key (deprecated, use `CLOUDFLARE_AI_GATEWAY_API_KEY` instead) |
+| `AI_GATEWAY_BASE_URL` | No | Legacy AI Gateway endpoint URL (deprecated) |
 | `CF_ACCESS_TEAM_DOMAIN` | Yes* | Cloudflare Access team domain (required for admin UI) |
 | `CF_ACCESS_AUD` | Yes* | Cloudflare Access application audience (required for admin UI) |
 | `MOLTBOT_GATEWAY_TOKEN` | Yes | Gateway token for authentication (pass via `?token=` query param) |
