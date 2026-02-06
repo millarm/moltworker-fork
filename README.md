@@ -301,7 +301,7 @@ npm run deploy
 | `GET /cdp/json/new` | Create a new browser target |
 | `WS /cdp/devtools/browser/{id}` | WebSocket connection for CDP commands |
 
-All endpoints require the `CDP_SECRET` header for authentication.
+All endpoints require authentication via the `?secret=<CDP_SECRET>` query parameter.
 
 ## Built-in Skills
 
