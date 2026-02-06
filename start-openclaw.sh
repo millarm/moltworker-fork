@@ -202,38 +202,44 @@ if (process.env.ANTHROPIC_BASE_URL && process.env.ANTHROPIC_API_KEY) {
 }
 
 // Telegram configuration
+// Overwrite entire channel object to drop stale keys from old R2 backups
+// that would fail OpenClaw's strict config validation (see #47)
 if (process.env.TELEGRAM_BOT_TOKEN) {
-    config.channels.telegram = config.channels.telegram || {};
-    config.channels.telegram.botToken = process.env.TELEGRAM_BOT_TOKEN;
-    config.channels.telegram.enabled = true;
-    const telegramDmPolicy = process.env.TELEGRAM_DM_POLICY || 'pairing';
-    config.channels.telegram.dmPolicy = telegramDmPolicy;
+    const dmPolicy = process.env.TELEGRAM_DM_POLICY || 'pairing';
+    config.channels.telegram = {
+        botToken: process.env.TELEGRAM_BOT_TOKEN,
+        enabled: true,
+        dmPolicy: dmPolicy,
+    };
     if (process.env.TELEGRAM_DM_ALLOW_FROM) {
         config.channels.telegram.allowFrom = process.env.TELEGRAM_DM_ALLOW_FROM.split(',');
-    } else if (telegramDmPolicy === 'open') {
+    } else if (dmPolicy === 'open') {
         config.channels.telegram.allowFrom = ['*'];
     }
 }
 
 // Discord configuration
+// Discord uses a nested dm object: dm.policy, dm.allowFrom (per DiscordDmConfig)
 if (process.env.DISCORD_BOT_TOKEN) {
-    config.channels.discord = config.channels.discord || {};
-    config.channels.discord.token = process.env.DISCORD_BOT_TOKEN;
-    config.channels.discord.enabled = true;
-    const discordDmPolicy = process.env.DISCORD_DM_POLICY || 'pairing';
-    config.channels.discord.dm = config.channels.discord.dm || {};
-    config.channels.discord.dm.policy = discordDmPolicy;
-    if (discordDmPolicy === 'open') {
-        config.channels.discord.dm.allowFrom = ['*'];
+    const dmPolicy = process.env.DISCORD_DM_POLICY || 'pairing';
+    const dm = { policy: dmPolicy };
+    if (dmPolicy === 'open') {
+        dm.allowFrom = ['*'];
     }
+    config.channels.discord = {
+        token: process.env.DISCORD_BOT_TOKEN,
+        enabled: true,
+        dm: dm,
+    };
 }
 
 // Slack configuration
 if (process.env.SLACK_BOT_TOKEN && process.env.SLACK_APP_TOKEN) {
-    config.channels.slack = config.channels.slack || {};
-    config.channels.slack.botToken = process.env.SLACK_BOT_TOKEN;
-    config.channels.slack.appToken = process.env.SLACK_APP_TOKEN;
-    config.channels.slack.enabled = true;
+    config.channels.slack = {
+        botToken: process.env.SLACK_BOT_TOKEN,
+        appToken: process.env.SLACK_APP_TOKEN,
+        enabled: true,
+    };
 }
 
 fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
