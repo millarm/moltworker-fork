@@ -460,6 +460,7 @@ async function scheduled(
   const options = buildSandboxOptions(env);
   const sandbox = getSandbox(env.Sandbox, 'moltbot', options);
 
+<<<<<<< HEAD
   // Ensure gateway (and trading bots) are running before syncing
   // This is essential - without it, cron only syncs but doesn't restart bots
   try {
@@ -469,6 +470,12 @@ async function scheduled(
   } catch (err) {
     console.error('[cron] Failed to start gateway:', err);
     // Continue with sync anyway - we might still be able to backup existing data
+=======
+  const gatewayProcess = await findExistingMoltbotProcess(sandbox);
+  if (!gatewayProcess) {
+    console.log('[cron] Gateway not running yet, skipping sync');
+    return;
+>>>>>>> 2d03a1f (fix: skip cron sync if gateway is not running yet)
   }
 
   console.log('[cron] Starting backup sync to R2...');
