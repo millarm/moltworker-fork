@@ -189,17 +189,10 @@ if (process.env.OPENCLAW_DEV_MODE === 'true') {
     config.gateway.controlUi.allowInsecureAuth = true;
 }
 
-// Legacy AI Gateway base URL override — patch into provider config
-// (only needed when using AI_GATEWAY_BASE_URL, not native cloudflare-ai-gateway)
-if (process.env.ANTHROPIC_BASE_URL && process.env.ANTHROPIC_API_KEY) {
-    const baseUrl = process.env.ANTHROPIC_BASE_URL.replace(/\/+$/, '');
-    config.models = config.models || {};
-    config.models.providers = config.models.providers || {};
-    config.models.providers.anthropic = config.models.providers.anthropic || {};
-    config.models.providers.anthropic.baseUrl = baseUrl;
-    config.models.providers.anthropic.apiKey = process.env.ANTHROPIC_API_KEY;
-    console.log('Patched Anthropic provider with base URL:', baseUrl);
-}
+// Legacy AI Gateway base URL override:
+// ANTHROPIC_BASE_URL is picked up natively by the Anthropic SDK,
+// so we don't need to patch the provider config. Writing a provider
+// entry without a models array breaks OpenClaw's config validation.
 
 // AI Gateway model override (CF_AI_GATEWAY_MODEL=provider/model-id)
 // Adds a provider entry for any AI Gateway provider and sets it as default model.
@@ -289,7 +282,6 @@ if (process.env.SLACK_BOT_TOKEN && process.env.SLACK_APP_TOKEN) {
 
 fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 console.log('Configuration patched successfully');
-console.log('Config:', JSON.stringify(config, null, 2));
 EOFPATCH
 
 # ============================================================
