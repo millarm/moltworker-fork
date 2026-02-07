@@ -51,7 +51,7 @@ describe('syncToR2', () => {
       const result = await syncToR2(sandbox, env);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Sync aborted: no config file found');
+      expect(result.error).toBe('Sync failed');
     });
   });
 

@@ -138,10 +138,6 @@ describe('findExistingMoltbotProcess', () => {
     ];
     const { sandbox, listProcessesMock } = createMockSandbox();
     listProcessesMock.mockResolvedValue(processes);
-<<<<<<< HEAD
-=======
-
->>>>>>> 2528dd7 (add oxlint and oxfmt for linting and formatting (resolves #65))
     const result = await findExistingMoltbotProcess(sandbox);
     expect(result).toBeNull();
   });

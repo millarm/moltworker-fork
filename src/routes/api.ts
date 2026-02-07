@@ -38,17 +38,11 @@ adminApi.get('/devices', async (c) => {
     await ensureMoltbotGateway(sandbox, c.env);
 
     // Run OpenClaw CLI to list devices
-<<<<<<< HEAD
     // Must specify --url and --token (OpenClaw v2026.2.3 requires explicit credentials with --url)
     const token = c.env.MOLTBOT_GATEWAY_TOKEN;
     const tokenArg = token ? ` --token ${token}` : '';
     const proc = await sandbox.startProcess(
       `openclaw devices list --json --url ws://localhost:18789${tokenArg}`,
-=======
-    // Must specify --url to connect to the gateway running in the same container
-    const proc = await sandbox.startProcess(
-      'openclaw devices list --json --url ws://localhost:18789',
->>>>>>> 2528dd7 (add oxlint and oxfmt for linting and formatting (resolves #65))
     );
     await waitForProcess(proc, CLI_TIMEOUT_MS);
 
@@ -101,15 +95,10 @@ adminApi.post('/devices/:requestId/approve', async (c) => {
     await ensureMoltbotGateway(sandbox, c.env);
 
     // Run OpenClaw CLI to approve the device
-<<<<<<< HEAD
     const token = c.env.MOLTBOT_GATEWAY_TOKEN;
     const tokenArg = token ? ` --token ${token}` : '';
     const proc = await sandbox.startProcess(
       `openclaw devices approve ${requestId} --url ws://localhost:18789${tokenArg}`,
-=======
-    const proc = await sandbox.startProcess(
-      `openclaw devices approve ${requestId} --url ws://localhost:18789`,
->>>>>>> 2528dd7 (add oxlint and oxfmt for linting and formatting (resolves #65))
     );
     await waitForProcess(proc, CLI_TIMEOUT_MS);
 
@@ -142,15 +131,10 @@ adminApi.post('/devices/approve-all', async (c) => {
     await ensureMoltbotGateway(sandbox, c.env);
 
     // First, get the list of pending devices
-<<<<<<< HEAD
     const token = c.env.MOLTBOT_GATEWAY_TOKEN;
     const tokenArg = token ? ` --token ${token}` : '';
     const listProc = await sandbox.startProcess(
       `openclaw devices list --json --url ws://localhost:18789${tokenArg}`,
-=======
-    const listProc = await sandbox.startProcess(
-      'openclaw devices list --json --url ws://localhost:18789',
->>>>>>> 2528dd7 (add oxlint and oxfmt for linting and formatting (resolves #65))
     );
     await waitForProcess(listProc, CLI_TIMEOUT_MS);
 
@@ -180,11 +164,7 @@ adminApi.post('/devices/approve-all', async (c) => {
       try {
         // eslint-disable-next-line no-await-in-loop -- sequential device approval required
         const approveProc = await sandbox.startProcess(
-<<<<<<< HEAD
           `openclaw devices approve ${device.requestId} --url ws://localhost:18789${tokenArg}`,
-=======
-          `openclaw devices approve ${device.requestId} --url ws://localhost:18789`,
->>>>>>> 2528dd7 (add oxlint and oxfmt for linting and formatting (resolves #65))
         );
         // eslint-disable-next-line no-await-in-loop
         await waitForProcess(approveProc, CLI_TIMEOUT_MS);

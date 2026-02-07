@@ -55,12 +55,9 @@ export function buildEnvVars(env: MoltbotEnv): Record<string, string> {
   if (env.CDP_SECRET) envVars.CDP_SECRET = env.CDP_SECRET;
   if (env.WORKER_URL) envVars.WORKER_URL = env.WORKER_URL;
   if (env.GITHUB_TOKEN) envVars.GITHUB_TOKEN = env.GITHUB_TOKEN;
-<<<<<<< HEAD
   if (env.IG_API_KEY) envVars.IG_API_KEY = env.IG_API_KEY;
   if (env.IG_USERNAME) envVars.IG_USERNAME = env.IG_USERNAME;
   if (env.IG_PASSWORD) envVars.IG_PASSWORD = env.IG_PASSWORD;
-=======
->>>>>>> 2b74f94 (Add github token)
 
   return envVars;
 }
