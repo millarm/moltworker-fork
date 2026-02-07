@@ -46,10 +46,23 @@ export async function syncToR2(sandbox: Sandbox, env: MoltbotEnv): Promise<SyncR
   // Use exit code (0 = exists) rather than stdout parsing to avoid log-flush races
   let configDir = '/root/.openclaw';
   try {
+<<<<<<< HEAD
     const checkNew = await sandbox.startProcess('test -f /root/.openclaw/openclaw.json');
     await waitForProcess(checkNew, 5000);
     if (checkNew.exitCode !== 0) {
       const checkLegacy = await sandbox.startProcess('test -f /root/.clawdbot/clawdbot.json');
+=======
+    const checkNew = await sandbox.startProcess(
+      'test -f /root/.openclaw/openclaw.json && echo "ok"',
+    );
+    await waitForProcess(checkNew, 5000);
+    const newLogs = await checkNew.getLogs();
+    if (!newLogs.stdout?.includes('ok')) {
+      // Try legacy path
+      const checkLegacy = await sandbox.startProcess(
+        'test -f /root/.clawdbot/clawdbot.json && echo "ok"',
+      );
+>>>>>>> 2528dd7 (add oxlint and oxfmt for linting and formatting (resolves #65))
       await waitForProcess(checkLegacy, 5000);
       if (checkLegacy.exitCode === 0) {
         configDir = '/root/.clawdbot';
@@ -71,6 +84,15 @@ export async function syncToR2(sandbox: Sandbox, env: MoltbotEnv): Promise<SyncR
 
   // Also sync workspace directory (excluding skills since they're synced separately)
   const syncCmd = `rsync -r --no-times --delete --exclude='*.lock' --exclude='*.log' --exclude='*.tmp' ${configDir}/ ${R2_MOUNT_PATH}/openclaw/ && rsync -r --no-times --delete --exclude='skills' /root/clawd/ ${R2_MOUNT_PATH}/workspace/ && rsync -r --no-times --delete /root/clawd/skills/ ${R2_MOUNT_PATH}/skills/ && date -Iseconds > ${R2_MOUNT_PATH}/.last-sync`;
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 12eb483 (fix: sync workspace directory to R2 for memory persistence (fixes #102))
+  
+=======
+
+>>>>>>> 97c7dac (add oxlint and oxfmt for linting and formatting (resolves #65))
+>>>>>>> 2528dd7 (add oxlint and oxfmt for linting and formatting (resolves #65))
   try {
     const proc = await sandbox.startProcess(syncCmd);
     await waitForProcess(proc, 30000); // 30 second timeout for sync

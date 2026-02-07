@@ -1,8 +1,13 @@
 import type { MoltbotEnv } from '../types';
 
 /**
+<<<<<<< HEAD
  * Build environment variables to pass to the Moltbot container process
  * 
+=======
+ * Build environment variables to pass to the OpenClaw container process
+ *
+>>>>>>> 2528dd7 (add oxlint and oxfmt for linting and formatting (resolves #65))
  * @param env - Worker environment bindings
  * @returns Environment variables record
  */
