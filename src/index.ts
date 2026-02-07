@@ -452,7 +452,7 @@ async function scheduled(
   _event: ScheduledEvent,
   env: MoltbotEnv,
   _ctx: ExecutionContext,
-): Promise<void> {
+): Promise<void> { 
   const options = buildSandboxOptions(env);
   const sandbox = getSandbox(env.Sandbox, 'moltbot', options);
 

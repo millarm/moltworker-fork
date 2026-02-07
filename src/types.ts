@@ -44,13 +44,10 @@ export interface MoltbotEnv {
   WORKER_URL?: string; // Public URL of the worker (for CDP endpoint)
   // Github token for gh CLI (used in moltbot container)
   GITHUB_TOKEN?: string;
-<<<<<<< HEAD
   // IG secrets
   IG_API_KEY?: string;
   IG_USERNAME?: string;
   IG_PASSWORD?: string;
-=======
->>>>>>> 2b74f94 (Add github token)
 }
 
 /**

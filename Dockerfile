@@ -23,8 +23,15 @@ RUN apt-get install -y python3 python3-pip python3-venv
 # Install pnpm globally
 RUN npm install -g pnpm
 
-<<<<<<< HEAD
-<<<<<<< HEAD
+# Install GitHub CLI
+RUN (type -p wget >/dev/null || apt-get install wget -y) \
+    && mkdir -p -m 755 /etc/apt/keyrings \
+    && wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+    && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+    && apt-get update && apt-get install -y gh
+
+# Install OpenClaw (formerly clawdbot/moltbot)
 # Install GitHub CLI
 RUN (type -p wget >/dev/null || apt-get install wget -y) \
     && mkdir -p -m 755 /etc/apt/keyrings \
@@ -34,23 +41,6 @@ RUN (type -p wget >/dev/null || apt-get install wget -y) \
     && apt-get update && apt-get install -y gh
 
 # Install moltbot (CLI is still named clawdbot until upstream renames)
-=======
-# Install OpenClaw (formerly clawdbot/moltbot)
->>>>>>> 9ab56d7 (feat: upgrade from clawdbot@2026.1.24-3 to openclaw@2026.2.3)
-=======
-# Install OpenClaw (formerly clawdbot/moltbot)
-=======
-# Install GitHub CLI
-RUN (type -p wget >/dev/null || apt-get install wget -y) \
-    && mkdir -p -m 755 /etc/apt/keyrings \
-    && wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
-    && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-    && apt-get update && apt-get install -y gh
-
-# Install moltbot (CLI is still named clawdbot until upstream renames)
->>>>>>> 72a0fd5 (Cassandra specific updates)
->>>>>>> 17c477c (Cassandra specific updates)
 # Pin to specific version for reproducible builds
 RUN npm install -g openclaw@2026.2.3 \
     && openclaw --version
