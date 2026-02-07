@@ -70,10 +70,11 @@ export async function syncToR2(sandbox: Sandbox, env: MoltbotEnv): Promise<SyncR
   }
 
   // Also sync workspace directory (excluding skills since they're synced separately)
-  const syncCmd = `rsync -r --no-times --delete --exclude='*.lock' --exclude='*.log' --exclude='*.tmp' ${configDir}/ ${R2_MOUNT_PATH}/openclaw/ && rsync -r --no-times --delete --exclude='skills' /root/clawd/ ${R2_MOUNT_PATH}/workspace/ && rsync -r --no-times --delete /root/clawd/skills/ ${R2_MOUNT_PATH}/skills/ && date -Iseconds > ${R2_MOUNT_PATH}/.last-sync`;
+  // Exclude large/generated directories to speed up sync: data/, logs/, __pycache__/, .coverage
+  const syncCmd = `rsync -r --no-times --delete --exclude='*.lock' --exclude='*.log' --exclude='*.tmp' ${configDir}/ ${R2_MOUNT_PATH}/openclaw/ && rsync -r --no-times --delete --exclude='skills' --exclude='data' --exclude='logs' --exclude='__pycache__' --exclude='.coverage' --exclude='*.pyc' /root/clawd/ ${R2_MOUNT_PATH}/workspace/ && rsync -r --no-times --delete /root/clawd/skills/ ${R2_MOUNT_PATH}/skills/ && date -Iseconds > ${R2_MOUNT_PATH}/.last-sync`;
   try {
     const proc = await sandbox.startProcess(syncCmd);
-    await waitForProcess(proc, 30000); // 30 second timeout for sync
+    await waitForProcess(proc, 120000); // 120 second timeout for sync (s3fs is slow)
 
     // Check for success by reading the timestamp file
     const timestampProc = await sandbox.startProcess(`cat ${R2_MOUNT_PATH}/.last-sync`);
