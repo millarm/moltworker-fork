@@ -69,10 +69,19 @@ export async function syncToR2(sandbox: Sandbox, env: MoltbotEnv): Promise<SyncR
     };
   }
 
+<<<<<<< HEAD
   // Sync to the new openclaw/ R2 prefix (even if source is legacy .clawdbot)
   // Also sync workspace directory (excluding skills since they're synced separately)
   const syncCmd = `rsync -r --no-times --delete --exclude='*.lock' --exclude='*.log' --exclude='*.tmp' ${configDir}/ ${R2_MOUNT_PATH}/openclaw/ && rsync -r --no-times --delete --exclude='skills' /root/clawd/ ${R2_MOUNT_PATH}/workspace/ && rsync -r --no-times --delete /root/clawd/skills/ ${R2_MOUNT_PATH}/skills/ && date -Iseconds > ${R2_MOUNT_PATH}/.last-sync`;
 
+=======
+  // Run rsync to backup config to R2
+  // Note: Use --no-times because s3fs doesn't support setting timestamps
+  // Backs up: clawdbot config, skills, and memory directory
+  // Memory sync: create target dir first, then rsync (handles empty source gracefully)
+  const syncCmd = `rsync -r --no-times --delete --exclude='*.lock' --exclude='*.log' --exclude='*.tmp' /root/.clawdbot/ ${R2_MOUNT_PATH}/clawdbot/ && rsync -r --no-times --delete /root/clawd/skills/ ${R2_MOUNT_PATH}/skills/ && mkdir -p ${R2_MOUNT_PATH}/memory/ && rsync -r --no-times --delete /root/clawd/memory/ ${R2_MOUNT_PATH}/memory/ && date -Iseconds > ${R2_MOUNT_PATH}/.last-sync`;
+  
+>>>>>>> 43ccdde (feat: backup and restore memory directory to R2)
   try {
     const proc = await sandbox.startProcess(syncCmd);
     await waitForProcess(proc, 30000); // 30 second timeout for sync
