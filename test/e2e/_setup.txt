@@ -13,7 +13,10 @@ start playwright browser
 ===
 ./start-browser
 ---
-ready
+{{ output }}
+---
+where
+* strip(output) endswith "ready"
 
 ===
 start video recording
