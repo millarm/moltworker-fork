@@ -43,21 +43,31 @@ export async function syncToR2(sandbox: Sandbox, env: MoltbotEnv): Promise<SyncR
 
   // Determine which config directory exists
   // Check new path first, fall back to legacy
-  // Use exit code (0 = exists) rather than stdout parsing to avoid log-flush races
+  // Use stdout check instead of exitCode (exitCode can be undefined in sandbox API)
   let configDir = '/root/.openclaw';
   try {
-    const checkNew = await sandbox.startProcess('test -f /root/.openclaw/openclaw.json');
+    const checkNew = await sandbox.startProcess(
+      '[ -f /root/.openclaw/openclaw.json ] && echo EXISTS || echo NOTFOUND',
+    );
     await waitForProcess(checkNew, 5000);
-    if (checkNew.exitCode !== 0) {
-      const checkLegacy = await sandbox.startProcess('test -f /root/.clawdbot/clawdbot.json');
+    const checkNewLogs = await checkNew.getLogs();
+    const newExists = checkNewLogs.stdout?.includes('EXISTS');
+
+    if (!newExists) {
+      const checkLegacy = await sandbox.startProcess(
+        '[ -f /root/.clawdbot/clawdbot.json ] && echo EXISTS || echo NOTFOUND',
+      );
       await waitForProcess(checkLegacy, 5000);
-      if (checkLegacy.exitCode === 0) {
+      const checkLegacyLogs = await checkLegacy.getLogs();
+      const legacyExists = checkLegacyLogs.stdout?.includes('EXISTS');
+
+      if (legacyExists) {
         configDir = '/root/.clawdbot';
       } else {
         return {
           success: false,
           error: 'Sync aborted: no config file found',
-          details: 'Neither openclaw.json nor clawdbot.json found in config directory.',
+          details: `Neither openclaw.json nor clawdbot.json found. New check: ${checkNewLogs.stdout || '(empty)'}, Legacy check: ${checkLegacyLogs.stdout || '(empty)'}`,
         };
       }
     }

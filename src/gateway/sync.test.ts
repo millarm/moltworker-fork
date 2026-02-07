@@ -43,15 +43,15 @@ describe('syncToR2', () => {
       const { sandbox, startProcessMock } = createMockSandbox();
       startProcessMock
         .mockResolvedValueOnce(createMockProcess('s3fs on /data/moltbot type fuse.s3fs\n'))
-        .mockResolvedValueOnce(createMockProcess('')) // No openclaw.json
-        .mockResolvedValueOnce(createMockProcess('')); // No clawdbot.json either
+        .mockResolvedValueOnce(createMockProcess('NOTFOUND')) // No openclaw.json
+        .mockResolvedValueOnce(createMockProcess('NOTFOUND')); // No clawdbot.json either
 
       const env = createMockEnvWithR2();
 
       const result = await syncToR2(sandbox, env);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Sync failed');
+      expect(result.error).toBe('Sync aborted: no config file found');
     });
   });
 
@@ -62,7 +62,7 @@ describe('syncToR2', () => {
       // Calls: mount check, check openclaw.json, rsync, cat timestamp
       startProcessMock
         .mockResolvedValueOnce(createMockProcess('s3fs on /data/moltbot type fuse.s3fs\n'))
-        .mockResolvedValueOnce(createMockProcess('ok'))
+        .mockResolvedValueOnce(createMockProcess('EXISTS'))
         .mockResolvedValueOnce(createMockProcess(''))
         .mockResolvedValueOnce(createMockProcess(timestamp));
 
@@ -79,7 +79,7 @@ describe('syncToR2', () => {
       // Calls: mount check, check openclaw.json, rsync (fails), cat timestamp (empty)
       startProcessMock
         .mockResolvedValueOnce(createMockProcess('s3fs on /data/moltbot type fuse.s3fs\n'))
-        .mockResolvedValueOnce(createMockProcess('ok'))
+        .mockResolvedValueOnce(createMockProcess('EXISTS'))
         .mockResolvedValueOnce(createMockProcess('', { exitCode: 1 }))
         .mockResolvedValueOnce(createMockProcess(''));
 
@@ -97,7 +97,7 @@ describe('syncToR2', () => {
 
       startProcessMock
         .mockResolvedValueOnce(createMockProcess('s3fs on /data/moltbot type fuse.s3fs\n'))
-        .mockResolvedValueOnce(createMockProcess('ok'))
+        .mockResolvedValueOnce(createMockProcess('EXISTS'))
         .mockResolvedValueOnce(createMockProcess(''))
         .mockResolvedValueOnce(createMockProcess(timestamp));
 
