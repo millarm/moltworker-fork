@@ -58,6 +58,18 @@ wait for chat interface to load
 ---
 
 ===
+send /models command
+%require
+===
+./pw --session=moltworker-e2e run-code "async page => {
+  const textarea = await page.waitForSelector('textarea');
+  await textarea.fill('/models');
+  const btn = await page.waitForSelector('button:has-text(\"Send\")');
+  await btn.click();
+}"
+---
+
+===
 type math question into chat
 %require
 ===
