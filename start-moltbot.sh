@@ -105,6 +105,7 @@ if [ -d "$BACKUP_DIR/skills" ] && [ "$(ls -A $BACKUP_DIR/skills 2>/dev/null)" ];
     fi
 fi
 
+<<<<<<< HEAD
 # Restore memory from R2 backup if available (only if R2 is newer)
 MEMORY_DIR="/root/clawd/memory"
 if [ -d "$BACKUP_DIR/memory" ] && [ "$(ls -A $BACKUP_DIR/memory 2>/dev/null)" ]; then
@@ -116,6 +117,8 @@ if [ -d "$BACKUP_DIR/memory" ] && [ "$(ls -A $BACKUP_DIR/memory 2>/dev/null)" ];
     fi
 fi
 
+=======
+>>>>>>> 2b74f94 (Add github token)
 # If config file still doesn't exist, create from template
 if [ ! -f "$CONFIG_FILE" ]; then
     echo "No existing config found, initializing from template..."
@@ -147,6 +150,7 @@ if [ -n "$GITHUB_TOKEN" ]; then
     export GH_TOKEN="$GITHUB_TOKEN"  # gh CLI also checks this
 fi
 
+<<<<<<< HEAD
 if [ -n "$IG_API_KEY" ]; then
     export IG_API_KEY="$IG_API_KEY"
 fi
@@ -212,6 +216,9 @@ elif [ -n "$WORKSPACE_REPO" ]; then
     echo "WORKSPACE_REPO set but gh CLI not available, skipping restore"
 fi
 
+=======
+# ============================================================
+>>>>>>> 2b74f94 (Add github token)
 # UPDATE CONFIG FROM ENVIRONMENT VARIABLES
 # ============================================================
 node << EOFNODE
@@ -367,6 +374,7 @@ console.log('Config:', JSON.stringify(config, null, 2));
 EOFNODE
 
 # ============================================================
+<<<<<<< HEAD
 # ============================================================
 # WORKSPACE BOOTSTRAP
 # ============================================================
@@ -376,6 +384,8 @@ if [ -x /usr/local/bin/workspace-bootstrap.sh ]; then
     /usr/local/bin/workspace-bootstrap.sh || echo "Warning: Workspace bootstrap had issues"
 fi
 
+=======
+>>>>>>> 2b74f94 (Add github token)
 # START GATEWAY
 # ============================================================
 # Note: R2 backup sync is handled by the Worker's cron trigger
