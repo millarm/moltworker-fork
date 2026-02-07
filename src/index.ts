@@ -456,10 +456,13 @@ async function scheduled(
   const options = buildSandboxOptions(env);
   const sandbox = getSandbox(env.Sandbox, 'moltbot', options);
 
-  const gatewayProcess = await findExistingMoltbotProcess(sandbox);
-  if (!gatewayProcess) {
-    console.log('[cron] Gateway not running yet, skipping sync');
-    return;
+  // Ensure gateway is running - this keeps the container alive even if it crashed
+  try {
+    await ensureMoltbotGateway(sandbox, env);
+    console.log('[cron] Gateway is running');
+  } catch (e) {
+    console.error('[cron] Failed to ensure gateway is running:', e);
+    // Continue to sync attempt anyway - R2 might still be accessible
   }
 
   console.log('[cron] Starting backup sync to R2...');
