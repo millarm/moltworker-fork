@@ -12,16 +12,18 @@ export interface SyncResult {
 }
 
 /**
- * Sync OpenClaw config from container to R2 for persistence.
+ * Sync OpenClaw config and workspace from container to R2 for persistence.
  * 
  * This function:
  * 1. Mounts R2 if not already mounted
  * 2. Verifies source has critical files (prevents overwriting good backup with empty data)
- * 3. Runs rsync to copy config to R2
+ * 3. Runs rsync to copy config, workspace, and skills to R2
  * 4. Writes a timestamp file for tracking
  * 
- * Supports both new (.openclaw) and legacy (.clawdbot) config paths.
- * Syncs to the new openclaw/ R2 prefix.
+ * Syncs three directories:
+ * - Config: /root/.openclaw/ (or /root/.clawdbot/) → R2:/openclaw/
+ * - Workspace: /root/clawd/ → R2:/workspace/ (IDENTITY.md, MEMORY.md, memory/, assets/)
+ * - Skills: /root/clawd/skills/ → R2:/skills/
  * 
  * @param sandbox - The sandbox instance
  * @param env - Worker environment bindings
@@ -77,8 +79,13 @@ export async function syncToR2(sandbox: Sandbox, env: MoltbotEnv): Promise<SyncR
   const syncCmd = `rsync -r --no-times --delete --exclude='*.lock' --exclude='*.log' --exclude='*.tmp' /root/.clawdbot/ ${R2_MOUNT_PATH}/clawdbot/ && rsync -r --no-times --delete /root/clawd/skills/ ${R2_MOUNT_PATH}/skills/ && mkdir -p ${R2_MOUNT_PATH}/memory/ && rsync -r --no-times --delete /root/clawd/memory/ ${R2_MOUNT_PATH}/memory/ && date -Iseconds > ${R2_MOUNT_PATH}/.last-sync`;
 =======
   // Sync to the new openclaw/ R2 prefix (even if source is legacy .clawdbot)
+<<<<<<< HEAD
   const syncCmd = `rsync -r --no-times --delete --exclude='*.lock' --exclude='*.log' --exclude='*.tmp' ${configDir}/ ${R2_MOUNT_PATH}/openclaw/ && rsync -r --no-times --delete /root/clawd/skills/ ${R2_MOUNT_PATH}/skills/ && date -Iseconds > ${R2_MOUNT_PATH}/.last-sync`;
 >>>>>>> 9ab56d7 (feat: upgrade from clawdbot@2026.1.24-3 to openclaw@2026.2.3)
+=======
+  // Also sync workspace directory (excluding skills since they're synced separately)
+  const syncCmd = `rsync -r --no-times --delete --exclude='*.lock' --exclude='*.log' --exclude='*.tmp' ${configDir}/ ${R2_MOUNT_PATH}/openclaw/ && rsync -r --no-times --delete --exclude='skills' /root/clawd/ ${R2_MOUNT_PATH}/workspace/ && rsync -r --no-times --delete /root/clawd/skills/ ${R2_MOUNT_PATH}/skills/ && date -Iseconds > ${R2_MOUNT_PATH}/.last-sync`;
+>>>>>>> 12eb483 (fix: sync workspace directory to R2 for memory persistence (fixes #102))
   
   try {
     const proc = await sandbox.startProcess(syncCmd);
