@@ -24,8 +24,6 @@ RUN apt-get install -y python3 python3-pip python3-venv
 RUN npm install -g pnpm
 
 <<<<<<< HEAD
-# Install OpenClaw (formerly clawdbot/moltbot)
-=======
 # Install GitHub CLI
 RUN (type -p wget >/dev/null || apt-get install wget -y) \
     && mkdir -p -m 755 /etc/apt/keyrings \
@@ -35,7 +33,9 @@ RUN (type -p wget >/dev/null || apt-get install wget -y) \
     && apt-get update && apt-get install -y gh
 
 # Install moltbot (CLI is still named clawdbot until upstream renames)
->>>>>>> 72a0fd5 (Cassandra specific updates)
+=======
+# Install OpenClaw (formerly clawdbot/moltbot)
+>>>>>>> 9ab56d7 (feat: upgrade from clawdbot@2026.1.24-3 to openclaw@2026.2.3)
 # Pin to specific version for reproducible builds
 RUN npm install -g openclaw@2026.2.3 \
     && openclaw --version
@@ -43,11 +43,14 @@ RUN npm install -g openclaw@2026.2.3 \
 # Create OpenClaw directories
 # Legacy .clawdbot paths are kept for R2 backup migration
 RUN mkdir -p /root/.openclaw \
+# Create OpenClaw directories
+# Legacy .clawdbot paths are kept for R2 backup migration
+RUN mkdir -p /root/.openclaw \
     && mkdir -p /root/clawd \
     && mkdir -p /root/clawd/skills
 
 # Copy startup script
-# Build cache bust: 2026-02-06-v29-sync-workspace
+# Build cache bust: 2026-02-06-v28-openclaw-upgrade
 COPY start-openclaw.sh /usr/local/bin/start-openclaw.sh
 RUN chmod +x /usr/local/bin/start-openclaw.sh
 

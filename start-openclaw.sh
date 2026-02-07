@@ -95,18 +95,6 @@ else
     echo "R2 not mounted, starting fresh"
 fi
 
-# Restore workspace from R2 backup if available (only if R2 is newer)
-# This includes IDENTITY.md, USER.md, MEMORY.md, memory/, and assets/
-WORKSPACE_DIR="/root/clawd"
-if [ -d "$BACKUP_DIR/workspace" ] && [ "$(ls -A $BACKUP_DIR/workspace 2>/dev/null)" ]; then
-    if should_restore_from_r2; then
-        echo "Restoring workspace from $BACKUP_DIR/workspace..."
-        mkdir -p "$WORKSPACE_DIR"
-        cp -a "$BACKUP_DIR/workspace/." "$WORKSPACE_DIR/"
-        echo "Restored workspace from R2 backup"
-    fi
-fi
-
 # Restore skills from R2 backup if available (only if R2 is newer)
 SKILLS_DIR="/root/clawd/skills"
 if [ -d "$BACKUP_DIR/skills" ] && [ "$(ls -A $BACKUP_DIR/skills 2>/dev/null)" ]; then
@@ -205,99 +193,56 @@ if (process.env.OPENCLAW_DEV_MODE === 'true') {
     config.gateway.controlUi.allowInsecureAuth = true;
 }
 
-// Legacy AI Gateway base URL override:
-// ANTHROPIC_BASE_URL is picked up natively by the Anthropic SDK,
-// so we don't need to patch the provider config. Writing a provider
-// entry without a models array breaks OpenClaw's config validation.
-
-// AI Gateway model override (CF_AI_GATEWAY_MODEL=provider/model-id)
-// Adds a provider entry for any AI Gateway provider and sets it as default model.
-// Examples:
-//   workers-ai/@cf/meta/llama-3.3-70b-instruct-fp8-fast
-//   openai/gpt-4o
-//   anthropic/claude-sonnet-4-5
-if (process.env.CF_AI_GATEWAY_MODEL) {
-    const raw = process.env.CF_AI_GATEWAY_MODEL;
-    const slashIdx = raw.indexOf('/');
-    const gwProvider = raw.substring(0, slashIdx);
-    const modelId = raw.substring(slashIdx + 1);
-
-    const accountId = process.env.CF_AI_GATEWAY_ACCOUNT_ID;
-    const gatewayId = process.env.CF_AI_GATEWAY_GATEWAY_ID;
-    const apiKey = process.env.CLOUDFLARE_AI_GATEWAY_API_KEY;
-
-    let baseUrl;
-    if (accountId && gatewayId) {
-        baseUrl = 'https://gateway.ai.cloudflare.com/v1/' + accountId + '/' + gatewayId + '/' + gwProvider;
-        if (gwProvider === 'workers-ai') baseUrl += '/v1';
-    } else if (gwProvider === 'workers-ai' && process.env.CF_ACCOUNT_ID) {
-        baseUrl = 'https://api.cloudflare.com/client/v4/accounts/' + process.env.CF_ACCOUNT_ID + '/ai/v1';
-    }
-
-    if (baseUrl && apiKey) {
-        const api = gwProvider === 'anthropic' ? 'anthropic-messages' : 'openai-completions';
-        const providerName = 'cf-ai-gw-' + gwProvider;
-
-        config.models = config.models || {};
-        config.models.providers = config.models.providers || {};
-        config.models.providers[providerName] = {
-            baseUrl: baseUrl,
-            apiKey: apiKey,
-            api: api,
-            models: [{ id: modelId, name: modelId, contextWindow: 131072, maxTokens: 8192 }],
-        };
-        config.agents = config.agents || {};
-        config.agents.defaults = config.agents.defaults || {};
-        config.agents.defaults.model = { primary: providerName + '/' + modelId };
-        console.log('AI Gateway model override: provider=' + providerName + ' model=' + modelId + ' via ' + baseUrl);
-    } else {
-        console.warn('CF_AI_GATEWAY_MODEL set but missing required config (account ID, gateway ID, or API key)');
-    }
+// Legacy AI Gateway base URL override — patch into provider config
+// (only needed when using AI_GATEWAY_BASE_URL, not native cloudflare-ai-gateway)
+if (process.env.ANTHROPIC_BASE_URL && process.env.ANTHROPIC_API_KEY) {
+    const baseUrl = process.env.ANTHROPIC_BASE_URL.replace(/\/+$/, '');
+    config.models = config.models || {};
+    config.models.providers = config.models.providers || {};
+    config.models.providers.anthropic = config.models.providers.anthropic || {};
+    config.models.providers.anthropic.baseUrl = baseUrl;
+    config.models.providers.anthropic.apiKey = process.env.ANTHROPIC_API_KEY;
+    console.log('Patched Anthropic provider with base URL:', baseUrl);
 }
 
 // Telegram configuration
-// Overwrite entire channel object to drop stale keys from old R2 backups
-// that would fail OpenClaw's strict config validation (see #47)
 if (process.env.TELEGRAM_BOT_TOKEN) {
-    const dmPolicy = process.env.TELEGRAM_DM_POLICY || 'pairing';
-    config.channels.telegram = {
-        botToken: process.env.TELEGRAM_BOT_TOKEN,
-        enabled: true,
-        dmPolicy: dmPolicy,
-    };
+    config.channels.telegram = config.channels.telegram || {};
+    config.channels.telegram.botToken = process.env.TELEGRAM_BOT_TOKEN;
+    config.channels.telegram.enabled = true;
+    const telegramDmPolicy = process.env.TELEGRAM_DM_POLICY || 'pairing';
+    config.channels.telegram.dmPolicy = telegramDmPolicy;
     if (process.env.TELEGRAM_DM_ALLOW_FROM) {
         config.channels.telegram.allowFrom = process.env.TELEGRAM_DM_ALLOW_FROM.split(',');
-    } else if (dmPolicy === 'open') {
+    } else if (telegramDmPolicy === 'open') {
         config.channels.telegram.allowFrom = ['*'];
     }
 }
 
 // Discord configuration
-// Discord uses a nested dm object: dm.policy, dm.allowFrom (per DiscordDmConfig)
 if (process.env.DISCORD_BOT_TOKEN) {
-    const dmPolicy = process.env.DISCORD_DM_POLICY || 'pairing';
-    const dm = { policy: dmPolicy };
-    if (dmPolicy === 'open') {
-        dm.allowFrom = ['*'];
+    config.channels.discord = config.channels.discord || {};
+    config.channels.discord.token = process.env.DISCORD_BOT_TOKEN;
+    config.channels.discord.enabled = true;
+    const discordDmPolicy = process.env.DISCORD_DM_POLICY || 'pairing';
+    config.channels.discord.dm = config.channels.discord.dm || {};
+    config.channels.discord.dm.policy = discordDmPolicy;
+    if (discordDmPolicy === 'open') {
+        config.channels.discord.dm.allowFrom = ['*'];
     }
-    config.channels.discord = {
-        token: process.env.DISCORD_BOT_TOKEN,
-        enabled: true,
-        dm: dm,
-    };
 }
 
 // Slack configuration
 if (process.env.SLACK_BOT_TOKEN && process.env.SLACK_APP_TOKEN) {
-    config.channels.slack = {
-        botToken: process.env.SLACK_BOT_TOKEN,
-        appToken: process.env.SLACK_APP_TOKEN,
-        enabled: true,
-    };
+    config.channels.slack = config.channels.slack || {};
+    config.channels.slack.botToken = process.env.SLACK_BOT_TOKEN;
+    config.channels.slack.appToken = process.env.SLACK_APP_TOKEN;
+    config.channels.slack.enabled = true;
 }
 
 fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 console.log('Configuration patched successfully');
+console.log('Config:', JSON.stringify(config, null, 2));
 EOFPATCH
 
 # ============================================================

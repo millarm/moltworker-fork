@@ -138,7 +138,6 @@ describe('findExistingMoltbotProcess', () => {
     ];
     const { sandbox, listProcessesMock } = createMockSandbox();
     listProcessesMock.mockResolvedValue(processes);
-
     const result = await findExistingMoltbotProcess(sandbox);
     expect(result).toBeNull();
   });

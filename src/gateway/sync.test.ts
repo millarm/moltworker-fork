@@ -59,7 +59,6 @@ describe('syncToR2', () => {
     it('returns success when sync completes', async () => {
       const { sandbox, startProcessMock } = createMockSandbox();
       const timestamp = '2026-01-27T12:00:00+00:00';
-
       // Calls: mount check, check openclaw.json, rsync, cat timestamp
       startProcessMock
         .mockResolvedValueOnce(createMockProcess('s3fs on /data/moltbot type fuse.s3fs\n'))
@@ -77,7 +76,6 @@ describe('syncToR2', () => {
 
     it('returns error when rsync fails (no timestamp created)', async () => {
       const { sandbox, startProcessMock } = createMockSandbox();
-
       // Calls: mount check, check openclaw.json, rsync (fails), cat timestamp (empty)
       startProcessMock
         .mockResolvedValueOnce(createMockProcess('s3fs on /data/moltbot type fuse.s3fs\n'))

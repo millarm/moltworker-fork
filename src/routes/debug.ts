@@ -129,7 +129,6 @@ debug.get('/gateway-api', async (c) => {
 debug.get('/cli', async (c) => {
   const sandbox = c.get('sandbox');
   const cmd = c.req.query('cmd') || 'openclaw --help';
-
   try {
     const proc = await sandbox.startProcess(cmd);
 
@@ -368,7 +367,6 @@ debug.get('/container-config', async (c) => {
 
   try {
     const proc = await sandbox.startProcess('cat /root/.openclaw/openclaw.json');
-
     let attempts = 0;
     while (attempts < 10) {
       // eslint-disable-next-line no-await-in-loop -- intentional sequential polling
