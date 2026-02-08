@@ -23,6 +23,48 @@ echo "Backup directory: $BACKUP_DIR"
 mkdir -p "$CONFIG_DIR"
 
 # ============================================================
+# WAIT FOR R2 MOUNT
+# ============================================================
+# R2 mount may not be immediately available on container startup
+# (e.g., Durable Object reset during code updates). Wait for it
+# before attempting restore to avoid starting with empty workspace.
+
+wait_for_r2_mount() {
+    local max_wait=30
+    local wait_interval=2
+    local elapsed=0
+
+    echo "Waiting for R2 mount at $BACKUP_DIR..."
+
+    while [ $elapsed -lt $max_wait ]; do
+        # Check if R2 is mounted by looking for .last-sync or any backup data
+        if [ -f "$BACKUP_DIR/.last-sync" ] || \
+           [ -f "$BACKUP_DIR/openclaw/openclaw.json" ] || \
+           [ -f "$BACKUP_DIR/clawdbot/clawdbot.json" ] || \
+           [ -d "$BACKUP_DIR/workspace" ]; then
+            echo "R2 mount detected after ${elapsed}s"
+            return 0
+        fi
+
+        # Also check if the mount point exists but is empty (freshly mounted)
+        if [ -d "$BACKUP_DIR" ] && mountpoint -q "$BACKUP_DIR" 2>/dev/null; then
+            echo "R2 mountpoint detected after ${elapsed}s"
+            return 0
+        fi
+
+        sleep $wait_interval
+        elapsed=$((elapsed + wait_interval))
+        echo "  Waiting for R2... (${elapsed}s/${max_wait}s)"
+    done
+
+    echo "Warning: R2 mount not detected after ${max_wait}s, continuing without restore"
+    return 1
+}
+
+# Wait for R2 before attempting any restore
+wait_for_r2_mount
+
+# ============================================================
 # RESTORE FROM R2 BACKUP
 # ============================================================
 
