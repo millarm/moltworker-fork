@@ -42,7 +42,7 @@ RUN (type -p wget >/dev/null || apt-get install wget -y) \
 
 # Install moltbot (CLI is still named clawdbot until upstream renames)
 # Pin to specific version for reproducible builds
-RUN npm install -g openclaw@2026.2.3 \
+RUN npm install -g openclaw@2026.2.13 \
     && openclaw --version
 
 # Create OpenClaw directories
